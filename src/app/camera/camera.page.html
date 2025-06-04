@@ -1,0 +1,30 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>camera</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-header>
+    <ion-toolbar>
+      <ion-title>Espelho da Câmera</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-content>
+    <div class="video-container">
+      <video id="video" autoplay playsinline></video>
+    </div>
+    <ion-button (click)="startCamera()">Iniciar Câmera</ion-button>
+    <ion-button (click)="stopCamera()">Parar Câmera</ion-button>
+    <ion-button (click)="toggleCamera()">Trocar para {{ facingMode === 'user' ? 'Câmera Traseira' : 'Selfie' }}</ion-button>
+    <ion-button (click)="toggleBlackAndWhite()">Filtro {{ isBlackAndWhite ? 'Colorido' : 'Preto e Branco' }}</ion-button>
+    <ion-item>
+      <ion-label>Qualidade do Vídeo</ion-label>
+      <ion-select [(ngModel)]="videoQuality" (ionChange)="changeQuality()">
+        <ion-select-option value="low">Baixa (480p)</ion-select-option>
+        <ion-select-option value="medium">Média (720p)</ion-select-option>
+        <ion-select-option value="high">Alta (1080p)</ion-select-option>
+      </ion-select>
+    </ion-item>
+  </ion-content>

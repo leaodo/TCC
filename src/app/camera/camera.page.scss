@@ -1,0 +1,19 @@
+.video-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background: black;
+}
+#video {
+  width: 100%;
+  max-width: 100%;
+  transform: scaleX(-1); /* Espelha a imagem horizontalmente */
+}
+.ion-select {
+  max-width: 200px;
+}
+#video.black-and-white {
+  filter: grayscale(100%); /* Aplica o filtro de preto e branco */
+}
+
