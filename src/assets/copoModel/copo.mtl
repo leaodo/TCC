@@ -1,0 +1,36 @@
+newmtl Cup Material
+illum 7
+Kd 0 0 0
+adobe_interior_color 1 1 1
+Ni 1.6
+adobe_density 0
+Tr 0
+d 1
+Ka 0 0 0
+Ke 0 0 0
+Pm 0
+adobe_translucence 0
+Pr 0.503
+Ns 16
+Ks 1 1 1
+adobe_glow 0
+map_Kd copo/Cup Material_baseColor.jpg
+norm copo/Cup Material_normal.jpg
+
+newmtl Lid Material
+illum 7
+Kd 0.854306 0.854306 0.854306
+adobe_interior_color 1 1 1
+Ni 1.6
+adobe_density 0
+Tr 0
+d 1
+Ka 0 0 0
+Ke 0 0 0
+Pm 0
+adobe_translucence 0
+Pr 0.3849
+Ns 16
+Ks 1 1 1
+adobe_glow 0
+norm copo/Lid Material_normal.jpg

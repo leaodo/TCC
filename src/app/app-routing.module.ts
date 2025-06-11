@@ -14,7 +14,11 @@ const routes: Routes = [
   {
     path: 'camera',
     loadChildren: () => import('./camera/camera.module').then( m => m.CameraPageModule)
+  },  {
+    path: 'teste-ar',
+    loadChildren: () => import('./teste-ar/teste-ar.module').then( m => m.TesteARPageModule)
   },
+
 ];
 
 @NgModule({
