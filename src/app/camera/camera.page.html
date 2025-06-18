@@ -11,41 +11,27 @@
 
 <ion-content [fullscreen]="true" class="ion-padding">
   <div *ngIf="!isARMode" class="video-container">
-    <video id="video" autoplay playsinline [class.black-and-white]="isBlackAndWhite"></video>
+    <video id="video" autoplay playsinline [class.black-and-white]="isBlackAndWhite" style="display: none;"></video>
+    <canvas id="canvas"></canvas>
   </div>
-
-  <a-scene *ngIf="isARMode" embedded arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-    physics="driver: cannon; gravity: -9.8">
-    <a-assets>
-      <a-asset-item id="cup-obj" src="assets/copoModel/copo/copo.obj"></a-asset-item>
-      <a-asset-item id="cup-mtl" src="assets/copoModel/copo/copo.mtl"></a-asset-item>
-    </a-assets>
-    <a-marker preset="hiro">
-      <a-entity id="cup" obj-model="obj: #cup-obj; mtl: #cup-mtl" scale="0.1 0.1 0.1"
-        physics="type: dynamic; mass: 1; shape: box"></a-entity>
-    </a-marker>
-    <a-entity id="floor" geometry="primitive: plane; width: 10; height: 10" position="0 -0.5 0" rotation="-90 0 0"
-      material="opacity: 0.5; transparent: true" physics="type: static; shape: box"></a-entity>
-    <a-entity camera></a-entity>
-  </a-scene>
-
-  <ion-button (click)="startCamera()" *ngIf="!isARMode">Iniciar Câmera</ion-button>
-  <ion-button (click)="stopCamera()" *ngIf="!isARMode">Parar Câmera</ion-button>
-  <ion-button (click)="toggleCamera()" *ngIf="!isARMode">Trocar para {{ facingMode === 'user' ? 'Câmera Traseira' :
-    'Selfie' }}</ion-button>
-  <ion-button (click)="toggleBlackAndWhite()" *ngIf="!isARMode">Filtro {{ isBlackAndWhite ? 'Colorido' : 'Preto e
-    Branco' }}</ion-button>
-  <ion-button color="warning" (click)="takePhoto()" *ngIf="!isARMode">Tirar foto</ion-button>
-  <ion-item *ngIf="!isARMode">
-    <ion-label>Qualidade do Vídeo</ion-label>
-    <ion-select [(ngModel)]="videoQuality" (ionChange)="changeQuality()">
-      <ion-select-option value="low">Baixa (480p)</ion-select-option>
-      <ion-select-option value="medium">Média (720p)</ion-select-option>
-      <ion-select-option value="high">Alta (1080p)</ion-select-option>
-    </ion-select>
-  </ion-item>
-  <ion-button color="tertiary" class="settings-button" (click)="openSettings()"
-    *ngIf="!isARMode">Configurações</ion-button>
+  <div class="button-container" *ngIf="!isARMode">
+    <ion-button (click)="startCamera()">Iniciar Câmera</ion-button>
+    <ion-button (click)="stopCamera()">Parar Câmera</ion-button>
+    <ion-button (click)="toggleCamera()">Trocar para {{ facingMode === 'user' ? 'Câmera Traseira' : 'Selfie'
+      }}</ion-button>
+    <ion-button (click)="toggleBlackAndWhite()">Filtro {{ isBlackAndWhite ? 'Colorido' : 'Preto e Branco'
+      }}</ion-button>
+    <ion-button color="warning" (click)="takePhoto()">Tirar foto</ion-button>
+    <ion-item>
+      <ion-label>Qualidade do Vídeo</ion-label>
+      <ion-select [(ngModel)]="videoQuality" (ionChange)="changeQuality()">
+        <ion-select-option value="low">Baixa (480p)</ion-select-option>
+        <ion-select-option value="medium">Média (720p)</ion-select-option>
+        <ion-select-option value="high">Alta (1080p)</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-button color="tertiary" class="settings-button" (click)="openSettings()">Configurações</ion-button>
+  </div>
   <ion-button class="iniciarar" (click)="Iniciarar()">Iniciar AR</ion-button>
 </ion-content>
 

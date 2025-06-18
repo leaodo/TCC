@@ -49,6 +49,7 @@ export class CameraPage implements OnInit {
       this.flipVertical = flipVertical;
       this.zoomLevel = zoomLevel;
     }
+    window.addEventListener('resize', this.adjustCanvasSize.bind(this));
   }
 
   private savePhotosToStorage() {
@@ -76,6 +77,14 @@ export class CameraPage implements OnInit {
     await toast.present();
   }
 
+  adjustCanvasSize() {
+    const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+    if (canvas) {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+  }
+
   async startCamera() {
     await this.stopCamera();
     try {
@@ -90,14 +99,51 @@ export class CameraPage implements OnInit {
       };
       this.stream = await navigator.mediaDevices.getUserMedia(constraints);
       const video = document.getElementById('video') as HTMLVideoElement;
+      const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+      if (!canvas) {
+        console.error('Canvas element not found');
+        return;
+      }
       video.srcObject = this.stream;
-      this.applyTransformations();
+      this.adjustCanvasSize();
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        const render = () => {
+          const zoom = this.zoomLevel;
+          const srcWidth = video.videoWidth / zoom;
+          const srcHeight = video.videoHeight / zoom;
+          const srcX = (video.videoWidth - srcWidth) / 2;
+          const srcY = (video.videoHeight - srcHeight) / 2;
+          ctx.save();
+          if (this.flipHorizontal) {
+            ctx.scale(-1, 1);
+            ctx.translate(-canvas.width, 0);
+          }
+          if (this.flipVertical) {
+            ctx.scale(1, -1);
+            ctx.translate(0, -canvas.height);
+          }
+          ctx.drawImage(video, srcX, srcY, srcWidth, srcHeight, 0, 0, canvas.width, canvas.height);
+          ctx.restore();
+          requestAnimationFrame(render);
+        };
+        video.onloadedmetadata = () => {
+          console.log('Video metadata loaded:', video.videoWidth, video.videoHeight);
+          render();
+        };
+        video.onerror = (err) => {
+          console.error('Video error:', err);
+        };
+      } else {
+        console.error('Failed to get canvas context');
+      }
     } catch (error) {
+      console.error('Failed to start camera:', error);
       if (this.videoQuality !== 'low') {
         this.videoQuality = 'low';
         await this.startCamera();
       } else {
-        console.error('Falha ao iniciar a câmera');
+        this.showToast('Falha ao iniciar a câmera', 'danger', 'toast-error');
       }
     }
   }
@@ -107,7 +153,12 @@ export class CameraPage implements OnInit {
       this.stream.getTracks().forEach(track => track.stop());
       this.stream = null;
       const video = document.getElementById('video') as HTMLVideoElement;
+      const canvas = document.getElementById('canvas') as HTMLCanvasElement;
       video.srcObject = null;
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
     }
   }
 
@@ -122,28 +173,16 @@ export class CameraPage implements OnInit {
 
   toggleBlackAndWhite() {
     this.isBlackAndWhite = !this.isBlackAndWhite;
-    const video = document.getElementById('video') as HTMLVideoElement;
-    video.classList.toggle('black-and-white', this.isBlackAndWhite);
+    const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+    canvas.classList.toggle('black-and-white', this.isBlackAndWhite);
   }
 
   takePhoto() {
-    const video = document.getElementById('video') as HTMLVideoElement;
-    if (!video.srcObject) return;
+    const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+    if (!this.stream || !canvas) return;
 
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
     if (ctx) {
-      if (this.flipHorizontal) {
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-      }
-      if (this.flipVertical) {
-        ctx.translate(0, canvas.height);
-        ctx.scale(1, -1);
-      }
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       if (this.isBlackAndWhite) {
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imageData.data;
@@ -224,38 +263,23 @@ export class CameraPage implements OnInit {
 
   toggleFlipHorizontal() {
     this.flipHorizontal = !this.flipHorizontal;
-    this.applyTransformations();
     this.saveSettingsToStorage();
   }
 
   toggleFlipVertical() {
     this.flipVertical = !this.flipVertical;
-    this.applyTransformations();
     this.saveSettingsToStorage();
   }
 
   onZoomChange(event: any) {
     this.zoomLevel = event.detail.value;
-    this.applyTransformations();
     this.saveSettingsToStorage();
-  }
-
-  applyTransformations() {
-    const video = document.getElementById('video') as HTMLVideoElement;
-    if (video) {
-      let transform = '';
-      if (this.flipHorizontal) transform += 'scaleX(-1) ';
-      if (this.flipVertical) transform += 'scaleY(-1) ';
-      transform += `scale(${this.zoomLevel})`;
-      video.style.transform = transform;
-    }
   }
 
   resetSettings() {
     this.flipHorizontal = false;
     this.flipVertical = false;
     this.zoomLevel = 1;
-    this.applyTransformations();
     this.saveSettingsToStorage();
   }
 

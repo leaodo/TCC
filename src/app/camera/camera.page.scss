@@ -1,22 +1,40 @@
+ion-content {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Ocupa toda a altura da tela */
+  overflow: hidden;
+}
+
 .video-container {
+  flex: 1; /* Ocupa o espaço disponível acima dos botões */
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%;
   background: black;
+  overflow: hidden;
 }
 
 #video {
-  width: 100%;
-  max-width: 100%;
+  display: none; /* O vídeo é renderizado no canvas */
 }
 
+#canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Mantém a proporção do vídeo */
+}
 .ion-select {
   max-width: 200px;
 }
 
-#video.black-and-white {
+#canvas.black-and-white {
   filter: grayscale(100%);
+}
+@media (max-width: 600px) {
+  .button-container {
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 ion-button {
@@ -31,11 +49,11 @@ ion-button[color="warning"] {
   display: block;
   margin: 16px auto;
 }
-
 .iniciarar {
   text-align: center;
   width: 180px;
   height: 80px;
+  margin: 16px auto; /* Centraliza o botão e adiciona espaçamento */
 }
 
 ion-modal#preview-modal,
