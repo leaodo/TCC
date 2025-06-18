@@ -8,7 +8,7 @@ import { AlertController, ToastController } from '@ionic/angular';
   standalone: false
 })
 export class CameraPage implements OnInit {
-  private stream: MediaStream | null = null;
+  public stream: MediaStream | null = null; // Changed from private to public
   facingMode: 'user' | 'environment' = 'user';
   videoQuality: 'low' | 'medium' | 'high' = 'medium';
   isBlackAndWhite: boolean = false;
@@ -32,7 +32,6 @@ export class CameraPage implements OnInit {
     private alertController: AlertController,
     private toastController: ToastController
   ) { }
-
   ngOnInit() {
     const savedPhotos = localStorage.getItem('photos');
     if (savedPhotos) {
@@ -133,12 +132,15 @@ export class CameraPage implements OnInit {
         };
         video.onerror = (err) => {
           console.error('Video error:', err);
+          this.stopCamera();
         };
       } else {
         console.error('Failed to get canvas context');
+        this.stopCamera();
       }
     } catch (error) {
       console.error('Failed to start camera:', error);
+      this.stopCamera();
       if (this.videoQuality !== 'low') {
         this.videoQuality = 'low';
         await this.startCamera();
@@ -161,7 +163,6 @@ export class CameraPage implements OnInit {
       }
     }
   }
-
   async toggleCamera() {
     this.facingMode = this.facingMode === 'user' ? 'environment' : 'user';
     if (this.stream) await this.startCamera();
@@ -293,8 +294,9 @@ export class CameraPage implements OnInit {
     if (modal) modal.classList.remove('transparent');
   }
 
-  Iniciarar() { /* Função AR não modificada */ }
-
+  Iniciarar() {
+    console.log('Iniciar AR clicado');
+  }
   formatTimestamp(timestamp: Date): string {
     const day = String(timestamp.getDate()).padStart(2, '0');
     const month = String(timestamp.getMonth() + 1).padStart(2, '0');

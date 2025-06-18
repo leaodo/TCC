@@ -1,18 +1,12 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>camera</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="openGallery()">
-        <ion-img src="https://iili.io/Ff9Dgwl.png" style="width: 24px; height: 24px;"></ion-img>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content [fullscreen]="true" class="ion-padding">
   <div *ngIf="!isARMode" class="video-container">
     <video id="video" autoplay playsinline [class.black-and-white]="isBlackAndWhite" style="display: none;"></video>
     <canvas id="canvas"></canvas>
+    <!-- Placeholder for when camera is not active -->
+    <div *ngIf="!stream" class="camera-placeholder">
+      <img src="https://iili.io/FnpuvIf.png" alt="Camera Icon" class="placeholder-icon" />
+      <p class="placeholder-text">Clique em iniciar vídeo para abrir a câmera</p>
+    </div>
   </div>
   <div class="button-container" *ngIf="!isARMode">
     <ion-button (click)="startCamera()">Iniciar Câmera</ion-button>

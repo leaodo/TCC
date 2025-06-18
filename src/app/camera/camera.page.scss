@@ -12,6 +12,31 @@ ion-content {
   align-items: center;
   background: black;
   overflow: hidden;
+  position: relative; /* Ensure the placeholder is positioned within the container */
+}
+
+.camera-placeholder {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 10;
+}
+
+.placeholder-icon {
+  width: 64px;
+  height: 64px;
+  filter: invert(48%) sepia(13%) saturate(320%) hue-rotate(180deg) brightness(95%) contrast(80%);
+}
+
+.placeholder-text {
+  color: #667786;
+  font-size: 18px;
+  font-weight: 500;
+  margin-top: 16px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 #video {
