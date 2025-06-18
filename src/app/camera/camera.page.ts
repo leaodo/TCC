@@ -8,7 +8,7 @@ import { AlertController, ToastController } from '@ionic/angular';
   standalone: false
 })
 export class CameraPage implements OnInit {
-  public stream: MediaStream | null = null; // Changed from private to public
+  public stream: MediaStream | null = null;
   facingMode: 'user' | 'environment' = 'user';
   videoQuality: 'low' | 'medium' | 'high' = 'medium';
   isBlackAndWhite: boolean = false;
@@ -21,6 +21,8 @@ export class CameraPage implements OnInit {
   flipHorizontal: boolean = false;
   flipVertical: boolean = false;
   zoomLevel: number = 1;
+  videoDevices: MediaDeviceInfo[] = [];
+  selectedDeviceId: string = '';
 
   private qualitySettings = {
     low: { width: 640, height: 480, frameRate: 30 },
@@ -32,7 +34,8 @@ export class CameraPage implements OnInit {
     private alertController: AlertController,
     private toastController: ToastController
   ) { }
-  ngOnInit() {
+
+  async ngOnInit() {
     const savedPhotos = localStorage.getItem('photos');
     if (savedPhotos) {
       const parsedPhotos = JSON.parse(savedPhotos);
@@ -43,12 +46,27 @@ export class CameraPage implements OnInit {
     }
     const savedSettings = localStorage.getItem('cameraSettings');
     if (savedSettings) {
-      const { flipHorizontal, flipVertical, zoomLevel } = JSON.parse(savedSettings);
+      const { flipHorizontal, flipVertical, zoomLevel, selectedDeviceId } = JSON.parse(savedSettings);
       this.flipHorizontal = flipHorizontal;
       this.flipVertical = flipVertical;
       this.zoomLevel = zoomLevel;
+      this.selectedDeviceId = selectedDeviceId || '';
     }
     window.addEventListener('resize', this.adjustCanvasSize.bind(this));
+    await this.loadVideoDevices();
+  }
+
+  private async loadVideoDevices() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      this.videoDevices = devices.filter(device => device.kind === 'videoinput');
+      if (this.videoDevices.length === 0) {
+        console.warn('No video devices found');
+      }
+    } catch (error) {
+      console.error('Error enumerating devices:', error);
+      this.showToast('Erro ao listar dispositivos de câmera', 'danger', 'toast-error');
+    }
   }
 
   private savePhotosToStorage() {
@@ -59,7 +77,8 @@ export class CameraPage implements OnInit {
     const settings = {
       flipHorizontal: this.flipHorizontal,
       flipVertical: this.flipVertical,
-      zoomLevel: this.zoomLevel
+      zoomLevel: this.zoomLevel,
+      selectedDeviceId: this.selectedDeviceId
     };
     localStorage.setItem('cameraSettings', JSON.stringify(settings));
   }
@@ -87,12 +106,13 @@ export class CameraPage implements OnInit {
   async startCamera() {
     await this.stopCamera();
     try {
-      const constraints = {
+      const constraints: MediaStreamConstraints = {
         video: {
           facingMode: this.facingMode,
           width: { ideal: this.qualitySettings[this.videoQuality].width },
           height: { ideal: this.qualitySettings[this.videoQuality].height },
-          frameRate: { ideal: this.qualitySettings[this.videoQuality].frameRate }
+          frameRate: { ideal: this.qualitySettings[this.videoQuality].frameRate },
+          deviceId: this.selectedDeviceId ? { exact: this.selectedDeviceId } : undefined
         },
         audio: false
       };
@@ -150,6 +170,13 @@ export class CameraPage implements OnInit {
     }
   }
 
+  async onDeviceChange() {
+    this.saveSettingsToStorage();
+    if (this.stream) {
+      await this.startCamera();
+    }
+  }
+
   stopCamera() {
     if (this.stream) {
       this.stream.getTracks().forEach(track => track.stop());
@@ -163,6 +190,7 @@ export class CameraPage implements OnInit {
       }
     }
   }
+
   async toggleCamera() {
     this.facingMode = this.facingMode === 'user' ? 'environment' : 'user';
     if (this.stream) await this.startCamera();
@@ -281,7 +309,11 @@ export class CameraPage implements OnInit {
     this.flipHorizontal = false;
     this.flipVertical = false;
     this.zoomLevel = 1;
+    this.selectedDeviceId = '';
     this.saveSettingsToStorage();
+    if (this.stream) {
+      this.startCamera();
+    }
   }
 
   onRangeDragStart() {
@@ -297,6 +329,7 @@ export class CameraPage implements OnInit {
   Iniciarar() {
     console.log('Iniciar AR clicado');
   }
+
   formatTimestamp(timestamp: Date): string {
     const day = String(timestamp.getDate()).padStart(2, '0');
     const month = String(timestamp.getMonth() + 1).padStart(2, '0');

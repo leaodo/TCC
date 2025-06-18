@@ -1,3 +1,14 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>camera</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="openGallery()">
+        <ion-img src="https://iili.io/Ff9Dgwl.png" style="width: 24px; height: 24px;"></ion-img>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
 <ion-content [fullscreen]="true" class="ion-padding">
   <div *ngIf="!isARMode" class="video-container">
     <video id="video" autoplay playsinline [class.black-and-white]="isBlackAndWhite" style="display: none;"></video>
@@ -85,19 +96,42 @@
     </ion-header>
     <ion-content class="ion-padding">
       <ion-list>
-        <ion-item>
-          <ion-label>Inverter Horizontalmente</ion-label>
-          <ion-checkbox [(ngModel)]="flipHorizontal" (ionChange)="toggleFlipHorizontal()"></ion-checkbox>
-        </ion-item>
-        <ion-item>
-          <ion-label>Inverter Verticalmente</ion-label>
-          <ion-checkbox [(ngModel)]="flipVertical" (ionChange)="toggleFlipVertical()"></ion-checkbox>
-        </ion-item>
-        <ion-item>
-          <ion-label>Zoom</ion-label>
-          <ion-range min="1" max="3" step="0.1" [(ngModel)]="zoomLevel" (ionChange)="onZoomChange($event)"
-            (ionKnobMoveStart)="onRangeDragStart()" (ionKnobMoveEnd)="onRangeDragEnd()"></ion-range>
-        </ion-item>
+        <!-- Camera Settings Category -->
+        <ion-item-group>
+          <ion-item-divider>
+            <ion-label>Configurações de Câmera</ion-label>
+          </ion-item-divider>
+          <ion-item>
+            <ion-label>Inverter Horizontalmente</ion-label>
+            <ion-checkbox [(ngModel)]="flipHorizontal" (ionChange)="toggleFlipHorizontal()"></ion-checkbox>
+          </ion-item>
+          <ion-item>
+            <ion-label>Inverter Verticalmente</ion-label>
+            <ion-checkbox [(ngModel)]="flipVertical" (ionChange)="toggleFlipVertical()"></ion-checkbox>
+          </ion-item>
+          <ion-item>
+            <ion-label>Zoom</ion-label>
+            <ion-range min="1" max="3" step="0.1" [(ngModel)]="zoomLevel" (ionChange)="onZoomChange($event)"
+              (ionKnobMoveStart)="onRangeDragStart()" (ionKnobMoveEnd)="onRangeDragEnd()"></ion-range>
+          </ion-item>
+        </ion-item-group>
+
+        <!-- Tests (Beta) Category -->
+        <ion-item-group>
+          <ion-item-divider>
+            <ion-label>⚡ Testes (Beta)</ion-label>
+          </ion-item-divider>
+          <ion-item>
+            <ion-label>Selecionar Dispositivo de Câmera</ion-label>
+            <ion-select [(ngModel)]="selectedDeviceId" (ionChange)="onDeviceChange()">
+              <ion-select-option value="">Automático</ion-select-option>
+              <ion-select-option *ngFor="let device of videoDevices" [value]="device.deviceId">
+                {{ device.label || 'Câmera ' + (videoDevices.indexOf(device) + 1) }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-item-group>
+
         <ion-button expand="block" color="medium" (click)="resetSettings()">Restaurar Padrões</ion-button>
       </ion-list>
     </ion-content>
