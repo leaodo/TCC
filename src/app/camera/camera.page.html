@@ -10,12 +10,10 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding">
-  <!-- Modo Câmera Padrão -->
   <div *ngIf="!isARMode" class="video-container">
     <video id="video" autoplay playsinline [class.black-and-white]="isBlackAndWhite"></video>
   </div>
 
-  <!-- Modo AR com A-Frame e AR.js -->
   <a-scene *ngIf="isARMode" embedded arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
     physics="driver: cannon; gravity: -9.8">
     <a-assets>
@@ -26,13 +24,11 @@
       <a-entity id="cup" obj-model="obj: #cup-obj; mtl: #cup-mtl" scale="0.1 0.1 0.1"
         physics="type: dynamic; mass: 1; shape: box"></a-entity>
     </a-marker>
-    <!-- Plano virtual para colisão -->
     <a-entity id="floor" geometry="primitive: plane; width: 10; height: 10" position="0 -0.5 0" rotation="-90 0 0"
       material="opacity: 0.5; transparent: true" physics="type: static; shape: box"></a-entity>
     <a-entity camera></a-entity>
   </a-scene>
 
-  <!-- Controles -->
   <ion-button (click)="startCamera()" *ngIf="!isARMode">Iniciar Câmera</ion-button>
   <ion-button (click)="stopCamera()" *ngIf="!isARMode">Parar Câmera</ion-button>
   <ion-button (click)="toggleCamera()" *ngIf="!isARMode">Trocar para {{ facingMode === 'user' ? 'Câmera Traseira' :
@@ -48,16 +44,18 @@
       <ion-select-option value="high">Alta (1080p)</ion-select-option>
     </ion-select>
   </ion-item>
+  <ion-button color="tertiary" class="settings-button" (click)="openSettings()"
+    *ngIf="!isARMode">Configurações</ion-button>
   <ion-button class="iniciarar" (click)="Iniciarar()">Iniciar AR</ion-button>
 </ion-content>
 
-<ion-modal id="gallery-modal" [isOpen]="isGalleryOpen" (didDismiss)="isGalleryOpen = false">
+<ion-modal id="gallery-modal" [isOpen]="isGalleryOpen" (didDismiss)="closeGallery()">
   <ng-template>
     <ion-header>
       <ion-toolbar>
         <ion-title>Galeria</ion-title>
         <ion-buttons slot="end">
-          <ion-button (click)="closeGallery()">Fechar</ion-button>
+          <ion-button class="modal-close-button" (click)="closeGallery()">Fechar</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -65,17 +63,67 @@
       <ion-list>
         <ion-item *ngFor="let photo of photos; let i = index">
           <ion-thumbnail slot="start">
-            <img [src]="photo" />
+            <img [src]="photo.url" (click)="openPreview(i)" style="cursor: pointer;" />
           </ion-thumbnail>
           <ion-button (click)="savePhoto(i)">Salvar imagem</ion-button>
           <ion-button (click)="copyPhoto(i)">Copiar imagem</ion-button>
+          <ion-button color="danger" (click)="deletePhoto(i)">Deletar Imagem</ion-button>
+          <span class="photo-timestamp">{{ formatTimestamp(photo.timestamp) }}</span>
         </ion-item>
       </ion-list>
     </ion-content>
   </ng-template>
 </ion-modal>
 
-<!-- Scripts para A-Frame, AR.js e Física -->
+<ion-modal id="preview-modal" [isOpen]="isPreviewOpen" (didDismiss)="closePreview()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Visualizar Imagem</ion-title>
+        <ion-buttons slot="end">
+          <ion-button class="modal-close-button" (click)="closePreview()">Fechar</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+        <img [src]="selectedPhoto" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<ion-modal id="settings-modal" [isOpen]="isSettingsOpen" (didDismiss)="closeSettings()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Configurações da Câmera</ion-title>
+        <ion-buttons slot="end">
+          <ion-button class="modal-close-button" (click)="closeSettings()">Fechar</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <ion-list>
+        <ion-item>
+          <ion-label>Inverter Horizontalmente</ion-label>
+          <ion-checkbox [(ngModel)]="flipHorizontal" (ionChange)="toggleFlipHorizontal()"></ion-checkbox>
+        </ion-item>
+        <ion-item>
+          <ion-label>Inverter Verticalmente</ion-label>
+          <ion-checkbox [(ngModel)]="flipVertical" (ionChange)="toggleFlipVertical()"></ion-checkbox>
+        </ion-item>
+        <ion-item>
+          <ion-label>Zoom</ion-label>
+          <ion-range min="1" max="3" step="0.1" [(ngModel)]="zoomLevel" (ionChange)="onZoomChange($event)"
+            (ionKnobMoveStart)="onRangeDragStart()" (ionKnobMoveEnd)="onRangeDragEnd()"></ion-range>
+        </ion-item>
+        <ion-button expand="block" color="medium" (click)="resetSettings()">Restaurar Padrões</ion-button>
+      </ion-list>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
 <script src="assets/cannon.min.js"></script>
 <script src="assets/aframe.min.js"></script>
 <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
