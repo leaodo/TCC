@@ -1,5 +1,5 @@
-import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
@@ -15,7 +15,7 @@ import { CameraPage } from './camera.page';
     IonicModule,
     CameraPageRoutingModule,
   ],
-    schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   declarations: [CameraPage]
 })
-export class CameraPageModule {}
+export class CameraPageModule { }
