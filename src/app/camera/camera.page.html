@@ -37,8 +37,7 @@
   <ion-button (click)="stopCamera()" *ngIf="!isARMode">Parar Câmera</ion-button>
   <ion-button (click)="toggleCamera()" *ngIf="!isARMode">Trocar para {{ facingMode === 'user' ? 'Câmera Traseira' :
     'Selfie' }}</ion-button>
-  <ion-button (click)="toggleBlackAndWhite()" *ngIf="!isARMode">Filtro {{ isBlackAndWhite ? 'Colorido' : 'Preto e
-    Branco' }}</ion-button>
+  <ion-button (click)="toggleBlackAndWhite()" *ngIf="!isARMode">Filtro {{ isBlackAndWhite ? 'Colorido' : 'Preto e Branco' }}</ion-button>
   <ion-button color="warning" (click)="takePhoto()" *ngIf="!isARMode">Tirar foto</ion-button>
   <ion-item *ngIf="!isARMode">
     <ion-label>Qualidade do Vídeo</ion-label>
