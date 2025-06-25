@@ -10,53 +10,43 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding">
-  <!-- Modo Câmera Padrão -->
   <div *ngIf="!isARMode" class="video-container">
-    <video id="video" autoplay playsinline [class.black-and-white]="isBlackAndWhite"></video>
+    <video id="video" autoplay playsinline [class.black-and-white]="isBlackAndWhite" style="display: none;"></video>
+    <canvas id="canvas"></canvas>
+    <!-- Placeholder for when camera is not active -->
+    <div *ngIf="!stream" class="camera-placeholder">
+      <img src="https://iili.io/FnpuvIf.png" alt="Camera Icon" class="placeholder-icon" />
+      <p class="placeholder-text">Clique em iniciar vídeo para abrir a câmera</p>
+    </div>
   </div>
-
-  <!-- Modo AR com A-Frame e AR.js -->
-  <a-scene *ngIf="isARMode" embedded arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-    physics="driver: cannon; gravity: -9.8">
-    <a-assets>
-      <a-asset-item id="cup-obj" src="assets/copoModel/copo/copo.obj"></a-asset-item>
-      <a-asset-item id="cup-mtl" src="assets/copoModel/copo/copo.mtl"></a-asset-item>
-    </a-assets>
-    <a-marker preset="hiro">
-      <a-entity id="cup" obj-model="obj: #cup-obj; mtl: #cup-mtl" scale="0.1 0.1 0.1"
-        physics="type: dynamic; mass: 1; shape: box"></a-entity>
-    </a-marker>
-    <!-- Plano virtual para colisão -->
-    <a-entity id="floor" geometry="primitive: plane; width: 10; height: 10" position="0 -0.5 0" rotation="-90 0 0"
-      material="opacity: 0.5; transparent: true" physics="type: static; shape: box"></a-entity>
-    <a-entity camera></a-entity>
-  </a-scene>
-
-  <!-- Controles -->
-  <ion-button (click)="startCamera()" *ngIf="!isARMode">Iniciar Câmera</ion-button>
-  <ion-button (click)="stopCamera()" *ngIf="!isARMode">Parar Câmera</ion-button>
-  <ion-button (click)="toggleCamera()" *ngIf="!isARMode">Trocar para {{ facingMode === 'user' ? 'Câmera Traseira' :
-    'Selfie' }}</ion-button>
-  <ion-button (click)="toggleBlackAndWhite()" *ngIf="!isARMode">Filtro {{ isBlackAndWhite ? 'Colorido' : 'Preto e Branco' }}</ion-button>
-  <ion-button color="warning" (click)="takePhoto()" *ngIf="!isARMode">Tirar foto</ion-button>
-  <ion-item *ngIf="!isARMode">
-    <ion-label>Qualidade do Vídeo</ion-label>
-    <ion-select [(ngModel)]="videoQuality" (ionChange)="changeQuality()">
-      <ion-select-option value="low">Baixa (480p)</ion-select-option>
-      <ion-select-option value="medium">Média (720p)</ion-select-option>
-      <ion-select-option value="high">Alta (1080p)</ion-select-option>
-    </ion-select>
-  </ion-item>
+  <div class="button-container" *ngIf="!isARMode">
+    <ion-button (click)="startCamera()">Iniciar Câmera</ion-button>
+    <ion-button (click)="stopCamera()">Parar Câmera</ion-button>
+    <ion-button (click)="toggleCamera()">Trocar para {{ facingMode === 'user' ? 'Câmera Traseira' : 'Selfie'
+      }}</ion-button>
+    <ion-button (click)="toggleBlackAndWhite()">Filtro {{ isBlackAndWhite ? 'Colorido' : 'Preto e Branco'
+      }}</ion-button>
+    <ion-button color="warning" (click)="takePhoto()">Tirar foto</ion-button>
+    <ion-item>
+      <ion-label>Qualidade do Vídeo</ion-label>
+      <ion-select [(ngModel)]="videoQuality" (ionChange)="changeQuality()">
+        <ion-select-option value="low">Baixa (480p)</ion-select-option>
+        <ion-select-option value="medium">Média (720p)</ion-select-option>
+        <ion-select-option value="high">Alta (1080p)</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-button color="tertiary" class="settings-button" (click)="openSettings()">Configurações</ion-button>
+  </div>
   <ion-button class="iniciarar" (click)="Iniciarar()">Iniciar AR</ion-button>
 </ion-content>
 
-<ion-modal id="gallery-modal" [isOpen]="isGalleryOpen" (didDismiss)="isGalleryOpen = false">
+<ion-modal id="gallery-modal" [isOpen]="isGalleryOpen" (didDismiss)="closeGallery()">
   <ng-template>
     <ion-header>
       <ion-toolbar>
         <ion-title>Galeria</ion-title>
         <ion-buttons slot="end">
-          <ion-button (click)="closeGallery()">Fechar</ion-button>
+          <ion-button class="modal-close-button" (click)="closeGallery()">Fechar</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -64,17 +54,90 @@
       <ion-list>
         <ion-item *ngFor="let photo of photos; let i = index">
           <ion-thumbnail slot="start">
-            <img [src]="photo" />
+            <img [src]="photo.url" (click)="openPreview(i)" style="cursor: pointer;" />
           </ion-thumbnail>
           <ion-button (click)="savePhoto(i)">Salvar imagem</ion-button>
           <ion-button (click)="copyPhoto(i)">Copiar imagem</ion-button>
+          <ion-button color="danger" (click)="deletePhoto(i)">Deletar Imagem</ion-button>
+          <span class="photo-timestamp">{{ formatTimestamp(photo.timestamp) }}</span>
         </ion-item>
       </ion-list>
     </ion-content>
   </ng-template>
 </ion-modal>
 
-<!-- Scripts para A-Frame, AR.js e Física -->
+<ion-modal id="preview-modal" [isOpen]="isPreviewOpen" (didDismiss)="closePreview()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Visualizar Imagem</ion-title>
+        <ion-buttons slot="end">
+          <ion-button class="modal-close-button" (click)="closePreview()">Fechar</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+        <img [src]="selectedPhoto" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<ion-modal id="settings-modal" [isOpen]="isSettingsOpen" (didDismiss)="closeSettings()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Configurações da Câmera</ion-title>
+        <ion-buttons slot="end">
+          <ion-button class="modal-close-button" (click)="closeSettings()">Fechar</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <ion-list>
+        <!-- Camera Settings Category -->
+        <ion-item-group>
+          <ion-item-divider>
+            <ion-label>Configurações de Câmera</ion-label>
+          </ion-item-divider>
+          <ion-item>
+            <ion-label>Inverter Horizontalmente</ion-label>
+            <ion-checkbox [(ngModel)]="flipHorizontal" (ionChange)="toggleFlipHorizontal()"></ion-checkbox>
+          </ion-item>
+          <ion-item>
+            <ion-label>Inverter Verticalmente</ion-label>
+            <ion-checkbox [(ngModel)]="flipVertical" (ionChange)="toggleFlipVertical()"></ion-checkbox>
+          </ion-item>
+          <ion-item>
+            <ion-label>Zoom</ion-label>
+            <ion-range min="1" max="3" step="0.1" [(ngModel)]="zoomLevel" (ionChange)="onZoomChange($event)"
+              (ionKnobMoveStart)="onRangeDragStart()" (ionKnobMoveEnd)="onRangeDragEnd()"></ion-range>
+          </ion-item>
+        </ion-item-group>
+
+        <!-- Tests (Beta) Category -->
+        <ion-item-group>
+          <ion-item-divider>
+            <ion-label>⚡ Testes (Beta)</ion-label>
+          </ion-item-divider>
+          <ion-item>
+            <ion-label>Selecionar Dispositivo de Câmera</ion-label>
+            <ion-select [(ngModel)]="selectedDeviceId" (ionChange)="onDeviceChange()">
+              <ion-select-option value="">Automático</ion-select-option>
+              <ion-select-option *ngFor="let device of videoDevices" [value]="device.deviceId">
+                {{ device.label || 'Câmera ' + (videoDevices.indexOf(device) + 1) }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-item-group>
+
+        <ion-button expand="block" color="medium" (click)="resetSettings()">Restaurar Padrões</ion-button>
+      </ion-list>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
 <script src="assets/cannon.min.js"></script>
 <script src="assets/aframe.min.js"></script>
 <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
