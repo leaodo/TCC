@@ -16,13 +16,27 @@ export class CameraPage implements OnInit {
   isGalleryOpen: boolean = false;
   isPreviewOpen: boolean = false;
   isSettingsOpen: boolean = false;
-  photos: { url: string, timestamp: Date }[] = [];
+  photos: { url: string, timestamp: Date, size: number }[] = [];
+  videos: { url: string, thumbnail: string, timestamp: Date, size: number }[] = [];
   selectedPhoto: string | null = null;
+  selectedVideoUrl: string | null = null;
+  isVideoPreviewOpen: boolean = false;
   flipHorizontal: boolean = false;
   flipVertical: boolean = false;
   zoomLevel: number = 1;
   videoDevices: MediaDeviceInfo[] = [];
   selectedDeviceId: string = '';
+  isRecording: boolean = false;
+  isPaused: boolean = false;
+  mediaRecorder: MediaRecorder | null = null;
+  recordedChunks: Blob[] = [];
+  recordingTimer: any;
+  maxRecordingTime: number = 30; // em segundos
+  recordingStartTime: number = 0;
+  elapsedTime: number = 0;
+  timerInterval: any;
+  photoFormat: 'png' | 'jpeg' = 'png';
+  videoFormat: 'mp4' | 'webm' = 'mp4';
 
   private qualitySettings = {
     low: { width: 640, height: 480, frameRate: 30 },
@@ -39,18 +53,31 @@ export class CameraPage implements OnInit {
     const savedPhotos = localStorage.getItem('photos');
     if (savedPhotos) {
       const parsedPhotos = JSON.parse(savedPhotos);
-      this.photos = parsedPhotos.map((photo: { url: string, timestamp: string }) => ({
+      this.photos = parsedPhotos.map((photo: { url: string, timestamp: string, size?: number }) => ({
         url: photo.url,
-        timestamp: new Date(photo.timestamp)
+        timestamp: new Date(photo.timestamp),
+        size: photo.size || 0
+      }));
+    }
+    const savedVideos = localStorage.getItem('videos');
+    if (savedVideos) {
+      const parsedVideos = JSON.parse(savedVideos);
+      this.videos = parsedVideos.map((video: { url: string, thumbnail: string, timestamp: string, size?: number }) => ({
+        url: video.url,
+        thumbnail: video.thumbnail,
+        timestamp: new Date(video.timestamp),
+        size: video.size || 0
       }));
     }
     const savedSettings = localStorage.getItem('cameraSettings');
     if (savedSettings) {
-      const { flipHorizontal, flipVertical, zoomLevel, selectedDeviceId } = JSON.parse(savedSettings);
+      const { flipHorizontal, flipVertical, zoomLevel, selectedDeviceId, photoFormat, videoFormat } = JSON.parse(savedSettings);
       this.flipHorizontal = flipHorizontal;
       this.flipVertical = flipVertical;
       this.zoomLevel = zoomLevel;
       this.selectedDeviceId = selectedDeviceId || '';
+      this.photoFormat = photoFormat || 'png';
+      this.videoFormat = videoFormat || 'mp4';
     }
     window.addEventListener('resize', this.adjustCanvasSize.bind(this));
     await this.loadVideoDevices();
@@ -73,25 +100,37 @@ export class CameraPage implements OnInit {
     localStorage.setItem('photos', JSON.stringify(this.photos));
   }
 
+  private saveVideosToStorage() {
+    localStorage.setItem('videos', JSON.stringify(this.videos));
+  }
+
   private saveSettingsToStorage() {
     const settings = {
       flipHorizontal: this.flipHorizontal,
       flipVertical: this.flipVertical,
       zoomLevel: this.zoomLevel,
-      selectedDeviceId: this.selectedDeviceId
+      selectedDeviceId: this.selectedDeviceId,
+      photoFormat: this.photoFormat,
+      videoFormat: this.videoFormat
     };
     localStorage.setItem('cameraSettings', JSON.stringify(settings));
   }
 
-  async showToast(message: string, color: string, cssClass: string) {
+  async showToast(message: string, color: string, cssClass: string, clickable: boolean = false) {
     const toast = await this.toastController.create({
       message,
-      duration: 2000,
+      duration: 2600,
       color,
       position: 'bottom',
       cssClass,
       buttons: [{ text: 'Fechar', role: 'cancel' }]
     });
+    if (clickable) {
+      toast.onclick = () => {
+        this.openGallery();
+        toast.dismiss();
+      };
+    }
     await toast.present();
   }
 
@@ -206,7 +245,7 @@ export class CameraPage implements OnInit {
     canvas.classList.toggle('black-and-white', this.isBlackAndWhite);
   }
 
-  takePhoto() {
+  async takePhoto() {
     const canvas = document.getElementById('canvas') as HTMLCanvasElement;
     if (!this.stream || !canvas) return;
 
@@ -221,21 +260,233 @@ export class CameraPage implements OnInit {
         }
         ctx.putImageData(imageData, 0, 0);
       }
-      const photoUrl = canvas.toDataURL('image/png');
-      this.photos.push({ url: photoUrl, timestamp: new Date() });
+      const mimeType = this.photoFormat === 'jpeg' ? 'image/jpeg' : 'image/png';
+      const quality = this.photoFormat === 'jpeg' ? 0.8 : 1.0; // JPEG quality
+      const photoUrl = canvas.toDataURL(mimeType, quality);
+      const blob = await (await fetch(photoUrl)).blob();
+      const size = blob.size;
+      this.photos.push({ url: photoUrl, timestamp: new Date(), size });
       this.savePhotosToStorage();
       this.showToast('Foto tirada :D', 'warning', 'toast-photo-taken');
     }
   }
 
+  private getSupportedMimeType(): string {
+    const mimeTypes = [
+      `video/${this.videoFormat};codecs=H.264`,
+      `video/${this.videoFormat}`,
+      'video/webm;codecs=vp9',
+      'video/webm;codecs=vp8',
+      'video/webm'
+    ];
+    for (const mimeType of mimeTypes) {
+      if (MediaRecorder.isTypeSupported(mimeType)) {
+        return mimeType;
+      }
+    }
+    return `video/${this.videoFormat}`;
+  }
+
+  async startRecording() {
+    if (!this.stream) return;
+    this.isRecording = true;
+    this.isPaused = false;
+    this.recordedChunks = [];
+    this.recordingStartTime = Date.now();
+    this.elapsedTime = 0;
+    const mimeType = this.getSupportedMimeType();
+    this.mediaRecorder = new MediaRecorder(this.stream, { mimeType });
+    this.mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        this.recordedChunks.push(event.data);
+      }
+    };
+    this.mediaRecorder.onstop = async () => {
+      const blobType = mimeType.startsWith('video/mp4') ? 'video/mp4' : 'video/webm';
+      const blob = new Blob(this.recordedChunks, { type: blobType });
+      const size = blob.size;
+      const url = URL.createObjectURL(blob);
+      const thumbnail = this.generateThumbnail();
+      this.videos.push({ url, thumbnail, timestamp: new Date(), size });
+      this.saveVideosToStorage();
+      this.showToast('Vídeo gravado com sucesso, veja a galeria ;)', 'success', 'toast-video-recorded', true);
+      this.stopTimer();
+    };
+    this.mediaRecorder.start();
+    this.startTimer();
+  }
+
+  togglePauseRecording() {
+    if (this.isRecording) {
+      if (this.isPaused) {
+        this.resumeRecording();
+      } else {
+        this.pauseRecording();
+      }
+    }
+  }
+
+  pauseRecording() {
+    if (this.mediaRecorder && this.isRecording && !this.isPaused) {
+      this.mediaRecorder.pause();
+      this.isPaused = true;
+      this.stopTimer();
+    }
+  }
+
+  resumeRecording() {
+    if (this.mediaRecorder && this.isRecording && this.isPaused) {
+      this.mediaRecorder.resume();
+      this.isPaused = false;
+      this.recordingStartTime = Date.now() - this.elapsedTime;
+      this.startTimer();
+    }
+  }
+
+  stopRecording() {
+    if (this.mediaRecorder && this.isRecording) {
+      this.mediaRecorder.stop();
+      this.isRecording = false;
+      this.isPaused = false;
+      this.stopTimer();
+    }
+  }
+
+  private startTimer() {
+    this.recordingTimer = setTimeout(() => {
+      this.stopRecording();
+    }, (this.maxRecordingTime * 1000) - this.elapsedTime);
+    this.timerInterval = setInterval(() => {
+      if (!this.isPaused) {
+        this.elapsedTime = Date.now() - this.recordingStartTime;
+      }
+    }, 100);
+  }
+
+  private stopTimer() {
+    clearTimeout(this.recordingTimer);
+    clearInterval(this.timerInterval);
+    this.elapsedTime = 0;
+  }
+
+  formatRecordingTime(): string {
+    const elapsedSeconds = Math.floor(this.elapsedTime / 1000);
+    return this.formatTime(elapsedSeconds);
+  }
+
+  formatTime(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  formatSize(bytes: number): string {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  private generateThumbnail(): string {
+    const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+    if (canvas) {
+      return canvas.toDataURL('image/png');
+    }
+    return 'https://via.placeholder.com/150';
+  }
+
+  openVideoPreview(index: number) {
+    if (index >= 0 && index < this.videos.length) {
+      this.selectedVideoUrl = this.videos[index].url;
+      this.isVideoPreviewOpen = true;
+    }
+  }
+
+  closeVideoPreview() {
+    this.isVideoPreviewOpen = false;
+    this.selectedVideoUrl = null;
+  }
+
+  async downloadVideo(index: number) {
+    const video = this.videos[index];
+    const link = document.createElement('a');
+    link.href = video.url;
+    link.download = `video_${video.timestamp.toISOString()}.${this.videoFormat}`;
+    link.click();
+    this.showToast('Vídeo baixado :)', 'success', 'toast-video-downloaded');
+  }
+
+  async copyVideo(index: number) {
+    const video = this.videos[index];
+    try {
+      const response = await fetch(video.url);
+      const blob = await response.blob();
+      const mimeType = `video/${this.videoFormat}`;
+      await navigator.clipboard.write([new ClipboardItem({ [mimeType]: blob })]);
+      this.showToast('Vídeo copiado :)', 'success', 'toast-video-copied');
+    } catch (error) {
+      console.error('Erro ao copiar vídeo:', error);
+      this.showToast('Erro ao copiar vídeo :(', 'danger', 'toast-error');
+    }
+  }
+
+  async deleteVideo(index: number) {
+    const alert = await this.alertController.create({
+      header: 'Confirmar Exclusão',
+      message: 'Tem certeza que deseja deletar este vídeo?',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Deletar',
+          handler: () => {
+            this.videos.splice(index, 1);
+            this.saveVideosToStorage();
+            this.showToast('Vídeo deletado :(', 'danger', 'toast-video-deleted');
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
   openGallery() { this.isGalleryOpen = true; }
   closeGallery() { this.isGalleryOpen = false; }
 
-  savePhoto(index: number) {
+  async savePhoto(index: number) {
     const photo = this.photos[index];
+    const mimeType = this.photoFormat === 'jpeg' ? 'image/jpeg' : 'image/png';
+    const quality = this.photoFormat === 'jpeg' ? 0.8 : 1.0;
+    let photoUrl = photo.url;
+    if (photo.url.includes('image/png') && this.photoFormat === 'jpeg') {
+      const canvas = document.createElement('canvas');
+      const img = new Image();
+      img.src = photo.url;
+      await new Promise((resolve) => { img.onload = resolve; });
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        photoUrl = canvas.toDataURL('image/jpeg', quality);
+      }
+    } else if (photo.url.includes('image/jpeg') && this.photoFormat === 'png') {
+      const canvas = document.createElement('canvas');
+      const img = new Image();
+      img.src = photo.url;
+      await new Promise((resolve) => { img.onload = resolve; });
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        photoUrl = canvas.toDataURL('image/png');
+      }
+    }
     const link = document.createElement('a');
-    link.href = photo.url;
-    link.download = `photo_${photo.timestamp.toISOString()}.png`;
+    link.href = photoUrl;
+    link.download = `photo_${photo.timestamp.toISOString()}.${this.photoFormat}`;
     link.click();
     this.showToast('Imagem salva :)', 'success', 'toast-photo-saved');
   }
@@ -243,9 +494,37 @@ export class CameraPage implements OnInit {
   async copyPhoto(index: number) {
     const photo = this.photos[index];
     try {
-      const response = await fetch(photo.url);
+      const mimeType = this.photoFormat === 'jpeg' ? 'image/jpeg' : 'image/png';
+      const quality = this.photoFormat === 'jpeg' ? 0.8 : 1.0;
+      let photoUrl = photo.url;
+      if (photo.url.includes('image/png') && this.photoFormat === 'jpeg') {
+        const canvas = document.createElement('canvas');
+        const img = new Image();
+        img.src = photo.url;
+        await new Promise((resolve) => { img.onload = resolve; });
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          photoUrl = canvas.toDataURL('image/jpeg', quality);
+        }
+      } else if (photo.url.includes('image/jpeg') && this.photoFormat === 'png') {
+        const canvas = document.createElement('canvas');
+        const img = new Image();
+        img.src = photo.url;
+        await new Promise((resolve) => { img.onload = resolve; });
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          photoUrl = canvas.toDataURL('image/png');
+        }
+      }
+      const response = await fetch(photoUrl);
       const blob = await response.blob();
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      await navigator.clipboard.write([new ClipboardItem({ [mimeType]: blob })]);
       this.showToast('Imagem copiada :)', 'success', 'toast-photo-copied');
     } catch (error) {
       this.showToast('Erro ao copiar :(', 'danger', 'toast-error');
@@ -305,11 +584,24 @@ export class CameraPage implements OnInit {
     this.saveSettingsToStorage();
   }
 
+  onPhotoFormatChange() {
+    this.saveSettingsToStorage();
+  }
+
+  onVideoFormatChange() {
+    this.saveSettingsToStorage();
+    if (this.stream) {
+      this.startCamera(); // Restart camera to apply new video format
+    }
+  }
+
   resetSettings() {
     this.flipHorizontal = false;
     this.flipVertical = false;
     this.zoomLevel = 1;
     this.selectedDeviceId = '';
+    this.photoFormat = 'png';
+    this.videoFormat = 'mp4';
     this.saveSettingsToStorage();
     if (this.stream) {
       this.startCamera();

@@ -10,10 +10,9 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding">
-  <div *ngIf="!isARMode" class="video-container">
+  <div *ngIf="!isARMode" class="video-container" [class.recording]="isRecording">
     <video id="video" autoplay playsinline [class.black-and-white]="isBlackAndWhite" style="display: none;"></video>
     <canvas id="canvas"></canvas>
-    <!-- Placeholder for when camera is not active -->
     <div *ngIf="!stream" class="camera-placeholder">
       <img src="https://iili.io/FnpuvIf.png" alt="Camera Icon" class="placeholder-icon" />
       <p class="placeholder-text">Clique em iniciar vídeo para abrir a câmera</p>
@@ -22,10 +21,8 @@
   <div class="button-container" *ngIf="!isARMode">
     <ion-button (click)="startCamera()">Iniciar Câmera</ion-button>
     <ion-button (click)="stopCamera()">Parar Câmera</ion-button>
-    <ion-button (click)="toggleCamera()">Trocar para {{ facingMode === 'user' ? 'Câmera Traseira' : 'Selfie'
-      }}</ion-button>
-    <ion-button (click)="toggleBlackAndWhite()">Filtro {{ isBlackAndWhite ? 'Colorido' : 'Preto e Branco'
-      }}</ion-button>
+    <ion-button (click)="toggleCamera()">Trocar para {{ facingMode === 'user' ? 'Câmera Traseira' : 'Selfie' }}</ion-button>
+    <ion-button (click)="toggleBlackAndWhite()">Filtro {{ isBlackAndWhite ? 'Colorido' : 'Preto e Branco' }}</ion-button>
     <ion-button color="warning" (click)="takePhoto()">Tirar foto</ion-button>
     <ion-item>
       <ion-label>Qualidade do Vídeo</ion-label>
@@ -38,6 +35,12 @@
     <ion-button color="tertiary" class="settings-button" (click)="openSettings()">Configurações</ion-button>
   </div>
   <ion-button class="iniciarar" (click)="Iniciarar()">Iniciar AR</ion-button>
+  <div class="recording-controls">
+    <div class="recording-timer" [class.blinking]="isPaused" *ngIf="isRecording">{{ formatRecordingTime() }} / {{ formatTime(maxRecordingTime) }}</div>
+    <ion-button color="success" (click)="startRecording()" [disabled]="isRecording || !stream">Iniciar Gravação</ion-button>
+    <ion-button color="warning" (click)="togglePauseRecording()" [disabled]="!isRecording">{{ isPaused ? 'Despausar Gravação' : 'Pausar Gravação' }}</ion-button>
+    <ion-button color="danger" (click)="stopRecording()" [disabled]="!isRecording">Encerrar Gravação</ion-button>
+  </div>
 </ion-content>
 
 <ion-modal id="gallery-modal" [isOpen]="isGalleryOpen" (didDismiss)="closeGallery()">
@@ -50,16 +53,39 @@
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
-    <ion-content>
+    <ion-content class="ion-padding">
       <ion-list>
         <ion-item *ngFor="let photo of photos; let i = index">
-          <ion-thumbnail slot="start">
-            <img [src]="photo.url" (click)="openPreview(i)" style="cursor: pointer;" />
+          <ion-thumbnail slot="start" (click)="openPreview(i)">
+            <img [src]="photo.url" alt="Photo" />
+            <div class="content-type-icon">
+              <img src="https://iili.io/FukVMH7.png" alt="Photo Icon" />
+            </div>
           </ion-thumbnail>
-          <ion-button (click)="savePhoto(i)">Salvar imagem</ion-button>
-          <ion-button (click)="copyPhoto(i)">Copiar imagem</ion-button>
-          <ion-button color="danger" (click)="deletePhoto(i)">Deletar Imagem</ion-button>
-          <span class="photo-timestamp">{{ formatTimestamp(photo.timestamp) }}</span>
+          <ion-label>
+            <h2>Foto {{ i + 1 }}</h2>
+            <p class="photo-timestamp">{{ formatTimestamp(photo.timestamp) }}</p>
+            <p class="photo-size">{{ formatSize(photo.size) }}</p>
+          </ion-label>
+          <ion-button slot="end" color="primary" (click)="savePhoto(i)">Baixar</ion-button>
+          <ion-button slot="end" color="medium" (click)="copyPhoto(i)">Copiar</ion-button>
+          <ion-button slot="end" color="danger" (click)="deletePhoto(i)">Deletar</ion-button>
+        </ion-item>
+        <ion-item *ngFor="let video of videos; let i = index">
+          <ion-thumbnail slot="start" (click)="openVideoPreview(i)">
+            <img [src]="video.thumbnail" alt="Video Thumbnail" />
+            <div class="content-type-icon">
+              <img src="https://iili.io/Fukjzss.png" alt="Video Icon" />
+            </div>
+          </ion-thumbnail>
+          <ion-label>
+            <h2>Vídeo {{ i + 1 }}</h2>
+            <p class="photo-timestamp">{{ formatTimestamp(video.timestamp) }}</p>
+            <p class="photo-size">{{ formatSize(video.size) }}</p>
+          </ion-label>
+          <ion-button slot="end" color="primary" (click)="downloadVideo(i)">Baixar</ion-button>
+          <ion-button slot="end" color="medium" (click)="copyVideo(i)">Copiar</ion-button>
+          <ion-button slot="end" color="danger" (click)="deleteVideo(i)">Deletar</ion-button>
         </ion-item>
       </ion-list>
     </ion-content>
@@ -70,7 +96,7 @@
   <ng-template>
     <ion-header>
       <ion-toolbar>
-        <ion-title>Visualizar Imagem</ion-title>
+        <ion-title>Visualizar Foto</ion-title>
         <ion-buttons slot="end">
           <ion-button class="modal-close-button" (click)="closePreview()">Fechar</ion-button>
         </ion-buttons>
@@ -78,8 +104,24 @@
     </ion-header>
     <ion-content class="ion-padding">
       <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
-        <img [src]="selectedPhoto" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+        <img [src]="selectedPhoto" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="Selected Photo" />
       </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<ion-modal id="video-preview-modal" [isOpen]="isVideoPreviewOpen" (didDismiss)="closeVideoPreview()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Reproduzir Vídeo</ion-title>
+        <ion-buttons slot="end">
+          <ion-button class="modal-close-button" (click)="closeVideoPreview()">Fechar</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <video controls [src]="selectedVideoUrl" style="width: 100%; height: auto;"></video>
     </ion-content>
   </ng-template>
 </ion-modal>
@@ -96,27 +138,53 @@
     </ion-header>
     <ion-content class="ion-padding">
       <ion-list>
-        <!-- Camera Settings Category -->
+        <ion-item-group>
+          <ion-item-divider>
+            <ion-label>📷 Captura de Fotos</ion-label>
+          </ion-item-divider>
+          <ion-item>
+            <ion-label>Formato de Baixar</ion-label>
+            <ion-select [(ngModel)]="photoFormat" (ionChange)="onPhotoFormatChange()">
+              <ion-select-option value="png">PNG</ion-select-option>
+              <ion-select-option value="jpeg">JPEG</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-item-group>
+        <ion-item-group>
+          <ion-item-divider>
+            <ion-label>🎥 Gravação de Vídeo</ion-label>
+          </ion-item-divider>
+          <ion-item>
+            <ion-label>Formato de Baixar</ion-label>
+            <ion-select [(ngModel)]="videoFormat" (ionChange)="onVideoFormatChange()">
+              <ion-select-option value="mp4">MP4</ion-select-option>
+              <ion-select-option value="webm">WEBM</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-item-group>
         <ion-item-group>
           <ion-item-divider>
             <ion-label>Configurações de Câmera</ion-label>
           </ion-item-divider>
           <ion-item>
             <ion-label>Inverter Horizontalmente</ion-label>
-            <ion-checkbox [(ngModel)]="flipHorizontal" (ionChange)="toggleFlipHorizontal()"></ion-checkbox>
+            <div class="switch">
+              <input type="checkbox" class="checkbox" [(ngModel)]="flipHorizontal" style="display: none;">
+              <div class="slider" (click)="toggleFlipHorizontal()"></div>
+            </div>
           </ion-item>
           <ion-item>
             <ion-label>Inverter Verticalmente</ion-label>
-            <ion-checkbox [(ngModel)]="flipVertical" (ionChange)="toggleFlipVertical()"></ion-checkbox>
+            <div class="switch">
+              <input type="checkbox" class="checkbox" [(ngModel)]="flipVertical" style="display: none;">
+              <div class="slider" (click)="toggleFlipVertical()"></div>
+            </div>
           </ion-item>
           <ion-item>
             <ion-label>Zoom</ion-label>
-            <ion-range min="1" max="3" step="0.1" [(ngModel)]="zoomLevel" (ionChange)="onZoomChange($event)"
-              (ionKnobMoveStart)="onRangeDragStart()" (ionKnobMoveEnd)="onRangeDragEnd()"></ion-range>
+            <ion-range min="1" max="3" step="0.1" [(ngModel)]="zoomLevel" (ionChange)="onZoomChange($event)" (ionKnobMoveStart)="onRangeDragStart()" (ionKnobMoveEnd)="onRangeDragEnd()"></ion-range>
           </ion-item>
         </ion-item-group>
-
-        <!-- Tests (Beta) Category -->
         <ion-item-group>
           <ion-item-divider>
             <ion-label>⚡ Testes (Beta)</ion-label>
@@ -131,13 +199,11 @@
             </ion-select>
           </ion-item>
         </ion-item-group>
-
         <ion-button expand="block" color="medium" (click)="resetSettings()">Restaurar Padrões</ion-button>
       </ion-list>
     </ion-content>
   </ng-template>
 </ion-modal>
-
 <script src="assets/cannon.min.js"></script>
 <script src="assets/aframe.min.js"></script>
 <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>

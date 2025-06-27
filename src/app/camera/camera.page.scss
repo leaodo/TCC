@@ -1,18 +1,29 @@
 ion-content {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Ocupa toda a altura da tela */
+  height: 100vh;
   overflow: hidden;
 }
 
 .video-container {
-  flex: 1; /* Ocupa o espaço disponível acima dos botões */
+  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
   background: black;
   overflow: hidden;
-  position: relative; /* Ensure the placeholder is positioned within the container */
+  position: relative;
+}
+
+.video-container.recording {
+  border: 4px solid red;
+  animation: blink-border 1s infinite;
+}
+
+@keyframes blink-border {
+  50% {
+    border-color: rgba(255, 0, 0, 0.3);
+  }
 }
 
 .camera-placeholder {
@@ -40,14 +51,15 @@ ion-content {
 }
 
 #video {
-  display: none; /* O vídeo é renderizado no canvas */
+  display: none;
 }
 
 #canvas {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* Mantém a proporção do vídeo */
+  object-fit: contain;
 }
+
 .ion-select {
   max-width: 200px;
 }
@@ -55,6 +67,7 @@ ion-content {
 #canvas.black-and-white {
   filter: grayscale(100%);
 }
+
 @media (max-width: 600px) {
   .button-container {
     flex-direction: column;
@@ -74,16 +87,45 @@ ion-button[color="warning"] {
   display: block;
   margin: 16px auto;
 }
+
 .iniciarar {
   text-align: center;
   width: 180px;
   height: 80px;
-  margin: 16px auto; /* Centraliza o botão e adiciona espaçamento */
+  margin: 16px auto;
+}
+
+.recording-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px 0;
+  flex-direction: column;
+  align-items: center;
+}
+
+.recording-timer {
+  color: black;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.recording-timer.blinking {
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.3;
+  }
 }
 
 ion-modal#preview-modal,
 ion-modal#gallery-modal,
-ion-modal#settings-modal {
+ion-modal#settings-modal,
+ion-modal#video-preview-modal {
   --height: 80%;
   --width: 90%;
   --border-radius: 8px;
@@ -94,6 +136,31 @@ ion-modal#preview-modal img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+}
+
+ion-modal#gallery-modal ion-thumbnail {
+  width: 100px;
+  height: 100px;
+  position: relative;
+}
+
+ion-modal#gallery-modal ion-thumbnail img {
+  object-fit: cover;
+}
+
+ion-modal#gallery-modal ion-thumbnail .content-type-icon {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 4px;
+  padding: 3px;
+  z-index: 10;
+}
+
+ion-modal#gallery-modal ion-thumbnail .content-type-icon img {
+  width: 20px;
+  height: 20px;
 }
 
 ion-modal.transparent {
@@ -179,6 +246,63 @@ ion-toast.toast-error::part(button) {
   color: white;
 }
 
+ion-toast.toast-video-recorded {
+  --border-radius: 8px;
+  --box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  --background: var(--ion-color-success);
+  font-weight: 500;
+  text-align: center;
+  animation: slideInOut 2.6s ease-in-out;
+  cursor: pointer;
+}
+
+ion-toast.toast-video-recorded::part(message),
+ion-toast.toast-video-recorded::part(button) {
+  color: white;
+}
+
+ion-toast.toast-video-downloaded {
+  --border-radius: 8px;
+  --box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  --background: var(--ion-color-success);
+  font-weight: 500;
+  text-align: center;
+  animation: slideInOut 2.6s ease-in-out;
+}
+
+ion-toast.toast-video-downloaded::part(message),
+ion-toast.toast-video-downloaded::part(button) {
+  color: white;
+}
+
+ion-toast.toast-video-deleted {
+  --border-radius: 8px;
+  --box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  --background: var(--ion-color-danger);
+  font-weight: 500;
+  text-align: center;
+  animation: slideInOut 2.6s ease-in-out;
+}
+
+ion-toast.toast-video-deleted::part(message),
+ion-toast.toast-video-deleted::part(button) {
+  color: white;
+}
+
+ion-toast.toast-video-copied {
+  --border-radius: 8px;
+  --box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  --background: var(--ion-color-success);
+  font-weight: 500;
+  text-align: center;
+  animation: slideInOut 2.6s ease-in-out;
+}
+
+ion-toast.toast-video-copied::part(message),
+ion-toast.toast-video-copied::part(button) {
+  color: white;
+}
+
 @keyframes slideInOut {
   0% { transform: translateY(100%); opacity: 0; }
   10% { transform: translateY(0); opacity: 1; }
@@ -192,4 +316,65 @@ ion-toast.toast-error::part(button) {
   font-size: 12px;
   margin-left: 8px;
   align-self: center;
+}
+
+.photo-size {
+  color: #808080;
+  opacity: 0.5;
+  font-size: 12px;
+  margin-left: 8px;
+  align-self: center;
+}
+
+.slider {
+  width: 60px;
+  height: 30px;
+  background-color: lightgray;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  border: 4px solid transparent;
+  transition: .3s;
+  box-shadow: 0 0 10px 0 rgb(0, 0, 0, 0.25) inset;
+  cursor: pointer;
+}
+
+.slider:hover {
+  opacity: 0.8;
+}
+
+.slider::before {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  transform: translateX(-30px);
+  border-radius: 20px;
+  transition: .3s;
+  box-shadow: 0 0 10px 3px rgb(0, 0, 0, 0.25);
+}
+
+.checkbox:checked ~ .slider::before {
+  transform: translateX(30px);
+  box-shadow: 0 0 10px 3px rgb(0, 0, 0, 0.25);
+}
+
+.checkbox:checked ~ .slider {
+  background-color: #2196F3;
+}
+
+.checkbox:active ~ .slider::before {
+  transform: translate(0);
+}
+
+ion-item .switch {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+ion-item .slider {
+  margin: 0 8px;
 }
