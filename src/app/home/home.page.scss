@@ -1,6 +1,37 @@
+/* CSS corrigido */
+.body {
+  font-family: "Jersey 10", sans-serif;
+  font-style: normal;
+  background-color: #F5AE71 !important; /* !important adicionado para garantir precedência */
+  --background: #F5AE71 !important; /* Propriedade específica do Ionic para ion-content */
+}
+ion-toolbar {
+  --background: #9B541A;
+}
+.menu {
+  display: flex;
+  text-align: right;
+  margin-left: 85%;
+  height: 50px;
+  width: 50px;
+}
+
+h4, h3, h2, h1 {
+  text-align: center;
+  color: black;
+}
+
+.text-start-1 {
+  font-size: 30px;
+}
+
+.text-start-2 {
+  font-size: 100px;
+}
+
+/* Estilo para o container, se ainda necessário */
 #container {
   text-align: center;
-
   position: absolute;
   left: 0;
   right: 0;
@@ -16,23 +47,31 @@
 #container p {
   font-size: 16px;
   line-height: 22px;
-
   color: #8c8c8c;
-
   margin: 0;
 }
-    @theme {
 
-        --font-size-start-1: 30px; 
-        --font-size-start-2: 128px
-      }
 #container a {
   text-decoration: none;
 }
-.body {
-  background-color: #ffffff;
+
+/* New styles for eyes */
+.eyes-container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 20px;
 }
 
-h4, h3, h2, h1 {
+.eye {
+  width: 80px;
+  height: 80px;
+  background-color: #000;
+  border: 10px solid #D3D3D3;
+  border-radius: 50%;
+}
+
+.buttons-join{
   text-align: center;
+  margin-top: 70%;
 }

@@ -11,7 +11,7 @@ import { animate } from 'animejs';
 export class HomePage {
 
   constructor() {}
-  
+
 
 
 
