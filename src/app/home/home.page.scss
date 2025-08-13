@@ -21,7 +21,18 @@
 
   margin: 0;
 }
+    @theme {
 
+        --font-size-start-1: 30px; 
+        --font-size-start-2: 128px
+      }
 #container a {
   text-decoration: none;
+}
+.body {
+  background-color: #ffffff;
+}
+
+h4, h3, h2, h1 {
+  text-align: center;
 }
