@@ -34,7 +34,7 @@
     </ion-item>
     <ion-button color="tertiary" class="settings-button" (click)="openSettings()">Configurações</ion-button>
   </div>
-  <ion-button class="iniciarar" (click)="Iniciarar()">Iniciar AR</ion-button>
+  <ion-button class="iniciarar" (click)="iniciarAR()">Iniciar AR</ion-button>
   <div class="recording-controls">
     <div class="recording-timer" [class.blinking]="isPaused" *ngIf="isRecording">{{ formatRecordingTime() }} / {{ formatTime(maxRecordingTime) }}</div>
     <ion-button color="success" (click)="startRecording()" [disabled]="isRecording || !stream">Iniciar Gravação</ion-button>

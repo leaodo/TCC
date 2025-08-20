@@ -1,29 +1,26 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
-    <ion-title>testeAR</ion-title>
+    <ion-title>Teste AR</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/camera"></ion-back-button> <!-- Voltar para câmera -->
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
-<!--
-<ion-content>
-  <a-scene
-    embedded
-    arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: true"
-  >
 
-    <a-entity camera></a-entity>
+<ion-content fullscreen>
+  <!-- Cena A-Frame com AR -->
+  <a-scene embedded arjs="sourceType: webcam; detectionMode: mono; matrixCodeType: 3x3; trackingMethod: best;" vr-mode-ui="enabled: false">
+    <!-- Câmera AR (markless com hit-test) -->
+    <a-camera gps-camera rotation-reader position="0 0 0"></a-camera> <!-- Para markerless location-based -->
 
+    <!-- Modelo 3D markless: Coloque um modelo GLTF/GLB no ambiente. Exemplo: Um cubo simples para teste -->
+    <a-entity gltf-model="url(assets/seu-modelo.gltf)" scale="0.5 0.5 0.5" position="0 0 -1" animation="property: rotation; to: 0 360 0; loop: true; dur: 10000"></a-entity>
+    <!-- Ou use primitivos A-Frame para teste rápido -->
+    <a-box position="-1 0.5 -3" rotation="0 45 0" color="#4CC3D9" shadow></a-box>
+    <a-sphere position="0 1.25 -5" radius="1.25" color="#EF2D5E" shadow></a-sphere>
 
-    <a-entity
-      gps-entity-place="latitude: <YOUR_LATITUDE>; longitude: <YOUR_LONGITUDE>"
-      geometry="primitive: box; width: 1; height: 1; depth: 1"
-      material="color: yellow"
-    ></a-entity>
+    <!-- Luz para iluminar o modelo -->
+    <a-light type="ambient" color="#445451"></a-light>
+    <a-light type="point" intensity="2" position="2 4 4"></a-light>
   </a-scene>
 </ion-content>
-
-<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/jeromeetienne/AR.js@3.0.0/aframe/build/aframe-ar.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/aframe-extras@7.4.0/dist/aframe-extras.min.js"></script>
--->

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AlertController, ToastController } from '@ionic/angular';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-camera',
@@ -46,7 +47,8 @@ export class CameraPage implements OnInit {
 
   constructor(
     private alertController: AlertController,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private router: Router
   ) { }
 
   async ngOnInit() {
@@ -618,9 +620,9 @@ export class CameraPage implements OnInit {
     if (modal) modal.classList.remove('transparent');
   }
 
-  Iniciarar() {
-    console.log('Iniciar AR clicado');
-  }
+ iniciarAR() {
+  this.router.navigate(['/teste-ar']);
+}
 
   formatTimestamp(timestamp: Date): string {
     const day = String(timestamp.getDate()).padStart(2, '0');
