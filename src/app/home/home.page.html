@@ -1,3 +1,4 @@
+<!-- home.page.html ou outro componente -->
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>
@@ -7,24 +8,31 @@
     </ion-title>
   </ion-toolbar>
 </ion-header>
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap" rel="stylesheet">
 
 <ion-content class="body" [fullscreen]="true">
+  <!-- Spline Viewer Aqui -->
+  <div class="spline-container">
+<spline-viewer url="https://prod.spline.design/AayxoMQN8HoNWhpg/scene.splinecode"></spline-viewer>
+  </div>
+
   <div class="start-text">
     <h4 class="text-start-1">Bem vindo para um novo MUNDO</h4>
     <h1 class="text-start-2">HistoriAR</h1>
   </div>
+
   <div class="eyes-container">
     <div class="eye"></div>
     <div class="eye"></div>
   </div>
+
   <a href="camera">Acessar camera</a>
-<div class="buttons-join">
-  <ion-button shape="default" href="/welcome">Primeira vez Aqui?</ion-button>
-  <br><br>
-  <ion-button shape="default" href="/welcome">Aluno Antigo</ion-button>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+  <div class="buttons-join">
+    <ion-button shape="default" href="/welcome">Primeira vez Aqui?</ion-button>
+    <br><br>
+    <ion-button shape="default" href="/welcome">Aluno Antigo</ion-button>
+  </div>
+</ion-content>
