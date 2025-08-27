@@ -18,6 +18,10 @@ const routes: Routes = [
     path: 'teste-ar',
     loadChildren: () => import('./teste-ar/teste-ar.module').then( m => m.TesteARPageModule)
   },
+  {
+    path: 'login',
+    loadChildren: () => import('./login/login.module').then( m => m.LoginPageModule)
+  },
 
 ];
 

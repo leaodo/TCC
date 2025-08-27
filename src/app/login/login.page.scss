@@ -1,0 +1,125 @@
+.body, .ion-padding {
+  --background: linear-gradient(135deg, #F5AE71 0%, #E59866 100%) !important;
+  font-family: "Jersey 10", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+}
+ion-toolbar {
+  --background: #9B541A;
+}
+
+.icon-back {
+  height: 30px;
+  width: 30px;
+  text-align: left;
+  align-items: left;
+  margin-left: 10px;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 400px;
+  padding: 1.5rem;
+}
+
+.welcome-text {
+  font-size: 2rem;
+  color: #333;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-weight: 600;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.input-item {
+  --background: #fff;
+  --border-radius: 0.5rem;
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  margin-bottom: 1rem;
+  overflow: visible; /* Ensure shadow is not clipped */
+}
+
+.custom-input {
+  max-width: 366px;
+  padding: 0.875rem !important;
+  font-size: 1rem;
+  border: 1.5px solid #000;
+  border-radius: 0.5rem;
+  box-shadow: 2.5px 3px 0 #000;
+  transition: ease 0.25s;
+  color: #000;
+}
+
+.custom-input:focus-within {
+  box-shadow: 5.5px 7px 0 #000;
+  color: #000;
+}
+
+.login-button {
+  --background: #9B541A;
+  --border-radius: 0.5rem;
+  --box-shadow: 3px 4px 0 #000;
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.signup-text {
+  text-align: center;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.signup-text a {
+  color: #1a73e8;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+@media (max-width: 576px) {
+  .login-container {
+    padding: 1rem;
+  }
+
+  .welcome-text {
+    font-size: 1.8rem;
+  }
+
+  .custom-input {
+    font-size: 0.9rem;
+    color: #000;
+  }
+}
+    .google-login-button {
+  border-radius: 20px;
+  box-sizing: border-box;
+  background-color: white;
+  padding: 10px 15px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  color:#000;
+  gap: 5px;
+    border: 1.5px solid #000;
+  border-radius: 30px;
+  box-shadow: 2.5px 3px 0 #000;
+  transition: ease 0.25s;
+  color: #000;
+}
+
+
+.google-login-button {
+  border: 2px solid #747474;
+}
