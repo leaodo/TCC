@@ -18,6 +18,18 @@ const routes: Routes = [
     path: 'teste-ar',
     loadChildren: () => import('./teste-ar/teste-ar.module').then( m => m.TesteARPageModule)
   },
+  {
+    path: 'dashboard',
+    loadChildren: () => import('./dashboard/dashboard.module').then( m => m.DashboardPageModule)
+  },
+  {
+    path: 'sign-up',
+    loadChildren: () => import('./sign-up/sign-up.module').then( m => m.SignUpPageModule)
+  },
+  {
+    path: 'log-in',
+    loadChildren: () => import('./log-in/log-in.module').then( m => m.LogInPageModule)
+  },
 
 ];
 
