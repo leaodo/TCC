@@ -1,13 +1,39 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>log-in</ion-title>
+    <ion-title>
+      <div class="menu-toolbar">
+      </div>
+    </ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">log-in</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="login-page">
+  <ion-card class="login-card">
+    <ion-card-header>
+      <ion-card-title class="ion-text-center">Faça o login</ion-card-title>
+    </ion-card-header>
+
+    <div class="ion-text-center">
+      <ion-icon name="book-outline" style="font-size: 60px; color: #5a3200;"></ion-icon>
+    </div>
+
+     <ion-card-content>
+
+      <ion-item class="input-item">
+        <ion-label position="floating">Email</ion-label>
+        <ion-input type="email"></ion-input>
+      </ion-item>
+
+
+      <ion-item class="input-item">
+        <ion-label position="floating">Senha</ion-label>
+        <ion-input type="password"></ion-input>
+      </ion-item>
+
+
+      <ion-button expand="block" class="login-button">
+        Entrar
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
 </ion-content>
