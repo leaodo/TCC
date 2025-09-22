@@ -1,0 +1,70 @@
+.login-page {
+  --background: #f6a868; /* fundo laranja claro */
+}
+
+.login-card {
+  margin: 40px;
+  background-color: #f6a868;
+  box-shadow: none;
+}
+
+ion-card-title {
+  font-weight: bold;
+  color: #5a3200;
+}
+
+ion-item {
+  --background: #ddd;
+  border-radius: 6px;
+  margin-top: 15px;
+}
+
+ion-button {
+  --background: #f1e2c9;
+  --color: #5a3200;
+  border-radius: 8px;
+}
+
+.buttons-join ion-button {
+  font-family: "Jersey 10", sans-serif;
+  font-style: normal;
+    font-size: 18px; /* Increase font size for larger buttons */
+  height: 60px; /* Increase height */
+  width: 200px; /* Increase width */
+  background-color: #D9B68C; /* Set the button color */
+  --background: #D9B68C; /* Ionic specific background property */
+  margin: 10px; /* Add some spacing between buttons */
+}
+
+.buttons-join ion-button:hover {
+  opacity: 0.8; /* Optional: slight opacity change on hover */
+}
+ion-toolbar {
+  --background: #9B541A;}
+.login-page {
+  --background: #f6a868; /* fundo */
+}
+
+.login-card {
+  margin: 40px;
+  background-color: #f6a868;
+  box-shadow: none;
+}
+
+ion-card-title {
+  font-weight: bold;
+  color: #5a3200;
+}
+
+.input-item {
+  --background: #ddd;
+  border-radius: 6px;
+  margin-top: 15px;
+}
+
+.login-button {
+  --background: #f1e2c9;
+  --color: #5a3200;
+  border-radius: 8px;
+  margin-top: 25px;
+}
